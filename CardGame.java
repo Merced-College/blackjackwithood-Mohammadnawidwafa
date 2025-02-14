@@ -1,83 +1,95 @@
+
 package cardGame;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 public class CardGame {
 
-	private static ArrayList<Card> deckOfCards = new ArrayList<Card>();
-	private static ArrayList<Card> playerCards = new ArrayList<Card>();
+    private static ArrayList<Card> deckOfCards = new ArrayList<>();
+    private static ArrayList<Card> playerCards = new ArrayList<>();
 
+    public static void main(String[] args) {
 
-	public static void main(String[] args) {
+        Scanner input = null;
+        try {
+            input = new Scanner(new File("cards.txt"));
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: File not found!");
+            e.printStackTrace();
+            return;
+        }
 
-		Scanner input = null;
-		try {
-			input = new Scanner(new File("cards.txt"));
-		} catch (FileNotFoundException e) {
-			// error
-			System.out.println("error");
-			e.printStackTrace();
-		}
+        // Read the card data from file
+        while (input.hasNext()) {
+            String[] fields = input.nextLine().split(",");
+            Card newCard = new Card(fields[0], fields[1].trim(),
+                    Integer.parseInt(fields[2].trim()), fields[3]);
+            deckOfCards.add(newCard);
+        }
+        input.close();
 
-		while(input.hasNext()) {
-			String[] fields  = input.nextLine().split(",");
-			//	public Card(String cardSuit, String cardName, int cardValue, String cardPicture) {
-			Card newCard = new Card(fields[0], fields[1].trim(),
-					Integer.parseInt(fields[2].trim()), fields[3]);
-			deckOfCards.add(newCard);	
-		}
+        shuffle();
 
-		shuffle();
+        // Deal the player 5 cards
+        for (int i = 0; i < 5; i++) {
+            playerCards.add(deckOfCards.remove(0));
+        }
 
-		//for(Card c: deckOfCards)
-			//System.out.println(c);
+        System.out.println("Your starting cards:");
+        printPlayerCards();
 
-		//deal the player 5 cards
-		for(int i = 0; i < 4; i++) {
-			playerCards.add(deckOfCards.remove(i));
-		}
-		
-		System.out.println("players cards");
-		for(Card c: playerCards)
-			System.out.println(c);
+        // New Feature: Allow user to draw a new card each round
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("\nWould you like to draw a new card? (yes/no)");
+            String response = scanner.nextLine().trim().toLowerCase();
 
-		System.out.println("pairs is " + checkFor2Kind());
+            if (response.equals("no")) {
+                break;  // Exit loop when the user says "no"
+            } else if (response.equals("yes")) {
+                if (!deckOfCards.isEmpty()) {
+                    Card newCard = deckOfCards.remove(0);
+                    playerCards.add(newCard);
+                    System.out.println("\nYou drew: " + newCard);
+                    printPlayerCards();
+                    System.out.println("Pairs found: " + checkFor2Kind());
+                } else {
+                    System.out.println("The deck is empty!");
+                }
+            } else {
+                System.out.println("Invalid input. Type 'yes' or 'no'.");
+            }
+        }
 
-	}//end main
+        // Close scanner after exiting the loop
+        scanner.close();
+        System.out.println("Game Over!");
+        scanner.close();
+    }
 
-	public static void shuffle() {
+    public static void shuffle() {
+        Collections.shuffle(deckOfCards);
+    }
 
-		//shuffling the cards by deleting and reinserting
-		for (int i = 0; i < deckOfCards.size(); i++) {
-			int index = (int) (Math.random()*deckOfCards.size());
-			Card c = deckOfCards.remove(index);
-			//System.out.println("c is " + c + ", index is " + index);
-			deckOfCards.add(c);
-		}
-	}
+    public static void printPlayerCards() {
+        System.out.println("\nYour cards:");
+        for (Card c : playerCards) {
+            System.out.println(c);
+        }
+    }
 
-	//check for 2 of a kind in the players hand
-	public static boolean checkFor2Kind() {
-
-		int count = 0;
-		for(int i = 0; i < playerCards.size() - 1; i++) {
-			Card current = playerCards.get(i);
-			Card next = playerCards.get(i+1);
-			
-			for(int j = i+1; j < playerCards.size(); j++) {
-				next = playerCards.get(j);
-				//System.out.println(" comparing " + current);
-				//System.out.println(" to " + next);
-				if(current.equals(next))
-					count++;
-			}//end of inner for
-			if(count == 1)
-				return true;
-
-		}//end outer for
-		return false;
-	}
-}//end class
+    public static boolean checkFor2Kind() {
+        for (int i = 0; i < playerCards.size(); i++) {
+            for (int j = i + 1; j < playerCards.size(); j++) {
+                if (playerCards.get(i).equals(playerCards.get(j))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
